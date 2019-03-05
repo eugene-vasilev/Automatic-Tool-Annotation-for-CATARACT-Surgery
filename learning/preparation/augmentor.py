@@ -56,7 +56,7 @@ class Augmentor:
         else:
             return img
 
-    def _rotate(self, img rotate_angle):
+    def _rotate(self, img, rotate_angle):
         img = Image.fromarray(img, 'RGB')
         img = img.rotate(rotate_angle, resample=Image.BILINEAR, expand=False)
         img = np.asarray(img)
@@ -77,8 +77,30 @@ class Augmentor:
 
         return img
 
-    def _shift(self, img):
+    def _shift(self, img, x_percent, y_percent):
+        y, x = img.shape[:2]
+        max_dx = x_percent * x
+        max_dy = y_percent * y
+        shift_x, shift_y = (
+            np.random.randint(-max_dx, max_dx),
+            np.random.randint(-max_dy, max_dy)
+        )
 
+        if shift_x > 0:
+            img[:, shift_x:] = img[:, :-shift_x]
+            img[:, :shift_x] = 0
+        elif shift_x < 0:
+            img[:, :shift_x] = img[:, -shift_x:]
+            img[:, shift_x:] = 0
+
+        if shift_y > 0:
+            img[shift_y:, :] = img[:-shift_y, :]
+            img[:shift_y, :] = 0
+        elif shift_y < 0:
+            img[:shift_y, :] = img[-shift_y:, :]
+            img[shift_y:, :] = 0
+
+        return img
 
     def _adjust_gamma(self, img, value):
         prepared_img = Image.fromarray(img, 'RGB')
