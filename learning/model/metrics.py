@@ -36,6 +36,8 @@ def precision(y_true, y_pred):
 
 def f1(y_true, y_pred):
     """F1 metric.
+
+    Only computes a batch-wise average of F1-score.
     """
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
