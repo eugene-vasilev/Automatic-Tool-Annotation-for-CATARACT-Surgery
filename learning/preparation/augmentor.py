@@ -17,18 +17,17 @@ class Augmentor:
         self.saturation = saturation
         self.color_augment_count = color_augment_count
 
-    def augment(self, img, mask):
-        mask = np.squeeze(mask, axis=(2,))
+    def augment(self, img):
 
         if self.angle:
             rotate_angle = int(self._random(self.angle[0], self.angle[1]))
-            img, mask = self._make_probabilistic(partial(self._rotate, rotate_angle=rotate_angle), img, mask)
+            img = self._make_probabilistic(partial(self._rotate, rotate_angle=rotate_angle), img)
 
         if self.tb_flip:
-            img, mask = self._make_probabilistic(self._tb_flip, img=img, mask=mask)
+            img = self._make_probabilistic(self._tb_flip, img=img)
 
         if self.rl_flip:
-            img, mask = self._make_probabilistic(self._rl_flip, img=img, mask=mask)
+            img = self._make_probabilistic(self._rl_flip, img=img)
 
         color_augmentations = np.array([[self.gamma, self._adjust_gamma],
                                         [self.brightness, self._adjust_brightness],
@@ -44,96 +43,81 @@ class Augmentor:
                 color_augment_logs.append(augment_index)
                 augment_range, augment_func = color_augmentations[augment_index]
                 value = self._random(augment_range[0], augment_range[1])
-                img, mask = self._make_probabilistic(partial(augment_func, value=value), img=img, mask=mask)
+                img = self._make_probabilistic(partial(augment_func, value=value), img=img)
 
-        return img, mask
+        return img
 
     def _random(self, min, max):
         return np.random.rand() * (max - min) + min
 
-    def _make_probabilistic(self, func, img, mask):
+    def _make_probabilistic(self, func, img):
         if 0.5 <= np.random.random():
-            return func(img, mask)
+            return func(img)
         else:
-            return img, mask
+            return img
 
-    def _rotate(self, img, mask, rotate_angle):
-        img = Image.fromarray(img, 'RGBA')
-        mask = Image.fromarray(mask)
-
+    def _rotate(self, img rotate_angle):
+        img = Image.fromarray(img, 'RGB')
         img = img.rotate(rotate_angle, resample=Image.BILINEAR, expand=False)
-        mask = mask.rotate(rotate_angle, resample=Image.BILINEAR, expand=False)
-
         img = np.asarray(img)
-        mask = np.asarray(mask)
 
-        return img, mask
+        return img
 
-    def _rl_flip(self, img, mask):
-        img = Image.fromarray(img, 'RGBA')
-        mask = Image.fromarray(mask)
-
-        img, mask = img.transpose(Image.FLIP_LEFT_RIGHT), mask.transpose(Image.FLIP_LEFT_RIGHT)
-
+    def _rl_flip(self, img):
+        img = Image.fromarray(img, 'RGB')
+        img = img.transpose(Image.FLIP_LEFT_RIGHT)
         img = np.asarray(img)
-        mask = np.asarray(mask)
 
-        return img, mask
+        return img
 
-    def _tb_flip(self, img, mask):
-        img = Image.fromarray(img, 'RGBA')
-        mask = Image.fromarray(mask)
-
-        img, mask = img.transpose(Image.FLIP_TOP_BOTTOM), mask.transpose(Image.FLIP_TOP_BOTTOM)
-
+    def _tb_flip(self, img):
+        img = Image.fromarray(img, 'RGB')
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
         img = np.asarray(img)
-        mask = np.asarray(mask)
 
-        return img, mask
+        return img
 
-    def _adjust_gamma(self, img, mask, value):
-        prepared_img = img[:, :, :3]
-        prepared_img = Image.fromarray(prepared_img, 'RGB')
+    def _shift(self, img):
+
+
+    def _adjust_gamma(self, img, value):
+        prepared_img = Image.fromarray(img, 'RGB')
 
         gain = 1
         input_mode = prepared_img.mode
         gamma_map = [255 * gain * pow(ele / 255., value) for ele in range(256)] * 3
         prepared_img = prepared_img.point(gamma_map)
-
         prepared_img = prepared_img.convert(input_mode)
 
         prepared_img = np.asarray(prepared_img)
-        img = np.dstack([prepared_img, img[..., 3]])
+        img = np.dstack([prepared_img, img])
 
-        return img, mask
+        return img
 
-    def _adjust_brightness(self, img, mask, value):
-        prepared_img = img[:, :, :3]
-        prepared_img = Image.fromarray(prepared_img, 'RGB')
+    def _adjust_brightness(self, img, value):
+        prepared_img = Image.fromarray(img, 'RGB')
 
         enhancer = ImageEnhance.Brightness(prepared_img)
         prepared_img = enhancer.enhance(value)
 
         prepared_img = np.asarray(prepared_img)
-        img = np.dstack([prepared_img, img[..., 3]])
+        img = np.dstack([prepared_img, img])
 
-        return img, mask
+        return img
 
-    def _adjust_contrast(self, img, mask, value):
-        prepared_img = img[:, :, :3]
-        prepared_img = Image.fromarray(prepared_img, 'RGB')
+    def _adjust_contrast(self, img, value):
+        prepared_img = Image.fromarray(img, 'RGB')
 
         enhancer = ImageEnhance.Contrast(prepared_img)
         prepared_img = enhancer.enhance(value)
 
         prepared_img = np.asarray(prepared_img)
-        img = np.dstack([prepared_img, img[..., 3]])
+        img = np.dstack([prepared_img, img])
 
-        return img, mask
+        return img
 
-    def _adjust_hue(self, img, mask, value):
-        prepared_img = img[:, :, :3]
-        prepared_img = Image.fromarray(prepared_img, 'RGB')
+    def _adjust_hue(self, img, value):
+        prepared_img = Image.fromarray(img, 'RGB')
 
         if not(-0.5 <= value <= 0.5):
             raise ValueError('hue_factor is not in [-0.5, 0.5].'.format(value))
@@ -145,18 +129,17 @@ class Augmentor:
         prepared_img = Image.merge('HSV', (h, s, v)).convert(input_mode)
 
         prepared_img = np.asarray(prepared_img)
-        img = np.dstack([prepared_img, img[..., 3]])
+        img = np.dstack([prepared_img, img])
 
-        return img, mask
+        return img
 
-    def _adjust_saturation(self, img, mask, value):
-        prepared_img = img[:, :, :3]
-        prepared_img = Image.fromarray(prepared_img, 'RGB')
+    def _adjust_saturation(self, img, value):
+        prepared_img = Image.fromarray(img, 'RGB')
 
         enhancer = ImageEnhance.Color(prepared_img)
         prepared_img = enhancer.enhance(value)
 
         prepared_img = np.asarray(prepared_img)
-        img = np.dstack([prepared_img, img[..., 3]])
+        img = np.dstack([prepared_img, img])
 
-        return img, mask
+        return img
