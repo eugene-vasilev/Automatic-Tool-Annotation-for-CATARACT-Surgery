@@ -31,12 +31,14 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
     csv_path, video_path = files
     video_name = video_path[video_path.rfind('/') + 1:]
     print('{} in processing'.format(video_name))
+    validation_nums = ['04', '12', '21']
 
     df = pd.read_csv(csv_path)
     df.columns = list(map(lambda x: get_snake_case(x), df.columns))
 
     num_end = video_path.rfind('.')
     video_num = video_path[num_end - 2: num_end]
+    split_name = 'validation' if video_num in validation_nums else 'train'
 
     rare_tools, common_tools, _ = get_tools_frequency_split(frequency_threshold=rare_tools_threshold)
 
@@ -54,7 +56,7 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
         target_columns = df_tools.columns[1:]
 
     for column_name in target_columns:
-        folder_path = './learning/data/extracted_frames/{}/'.format(column_name)
+        folder_path = './learning/data/extracted_frames/{}/{}/'.format(split_name, column_name)
         df_this_tool = df_tools[df_tools[column_name] == 1]
         create_dir(folder_path)
         frames = df_this_tool['frame']
@@ -65,7 +67,7 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
             for frame in frames[::common_tools_step]:
                 frames_labels.update({int(frame): column_name})
 
-    create_dir('./learning/data/extracted_frames/no_tools/')
+    create_dir('./learning/data/extracted_frames/{}/no_tools/'.format(split_name))
     for frame in df_no_tools['frame'][::no_tools_step]:
         frames_labels.update({int(frame): 'no_tools'})
 
@@ -80,7 +82,7 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
         success, image = video.read()
         if num in frame_nums:
             frame_nums.remove(num)
-            folder_path = './learning/data/extracted_frames/{}/'.format(frames_labels[num])
+            folder_path = './learning/data/extracted_frames/{}/{}/'.format(split_name, frames_labels[num])
             write_path = folder_path + '{}_{}.jpg'.format(video_num, num)
             cv2.imwrite(write_path, image)
         num += 1

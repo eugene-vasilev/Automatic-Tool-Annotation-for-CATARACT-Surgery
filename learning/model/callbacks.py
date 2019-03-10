@@ -91,7 +91,7 @@ class CyclicLR(Callback):
         self._reset()
 
     def _reset(self, new_base_lr=None, new_max_lr=None, new_step_size=None):
-        """Resets cycle iterations.
+        """Reset cycle iterations.
         Optional boundary/step size adjustment.
         """
         if new_base_lr is not None:
