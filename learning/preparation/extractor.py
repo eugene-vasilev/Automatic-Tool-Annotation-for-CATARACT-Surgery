@@ -27,7 +27,7 @@ def get_tools_frequency_split(frequency_threshold):
 
 
 def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
-                              no_tools_frames_count, column_names=None):
+                              no_tools_frames_count, column_names=None, delimiter=1):
     csv_path, video_path = files
     video_name = video_path[video_path.rfind('/') + 1:]
     print('{} in processing'.format(video_name))
@@ -81,10 +81,12 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
     while success:
         success, image = video.read()
         if num in frame_nums:
-            frame_nums.remove(num)
-            folder_path = './learning/data/extracted_frames/{}/{}/'.format(split_name, frames_labels[num])
-            write_path = folder_path + '{}_{}.jpg'.format(video_num, num)
-            cv2.imwrite(write_path, image)
+            if hasattr(image, 'shape'):
+                frame_nums.remove(num)
+                folder_path = './learning/data/extracted_frames/{}/{}/'.format(split_name, frames_labels[num])
+                write_path = folder_path + '{}_{}.jpg'.format(video_num, num)
+                image = cv2.resize(image, (image.shape[1] // delimiter, image.shape[0] // delimiter))
+                cv2.imwrite(write_path, image)
         num += 1
 
 
@@ -98,7 +100,8 @@ def extract_frames(args):
                                rare_tools_threshold=args.rare_tools_threshold,
                                common_tools_step=args.common_tools_step,
                                no_tools_frames_count=args.no_tools_frames_count // videos_length,
-                               column_names=args.column_names)
+                               column_names=args.column_names,
+                               delimiter=args.delimiter)
 
     with Pool(processes=args.workers) as pool:
         pool.map(process_function, zip(csvs, videos))
@@ -124,6 +127,9 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--workers',
                         type=int, default=12,
                         help='Number of processes')
+    parser.add_argument('-d', '--delimiter',
+                        type=int, default=2,
+                        help='Delimiter for image height and width')
 
     args = parser.parse_args()
 

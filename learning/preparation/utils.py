@@ -19,3 +19,9 @@ def get_snake_case(string):
     string = string.replace(' ', '_')
     string = string.replace('/', '_')
     return string
+
+
+def get_class_from_path(path):
+    end = path.rfind('/')
+    start = path[:end].rfind('/') + 1
+    return path[start:end]

@@ -3,6 +3,7 @@
 
 # custom
 learning/data/
+learning/model/saved_models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

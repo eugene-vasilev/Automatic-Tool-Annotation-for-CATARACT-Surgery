@@ -5,6 +5,7 @@ from keras.applications.mobilenetv2 import MobileNetV2
 
 from keras.layers import Conv2D, Add, ZeroPadding2D, MaxPooling2D, Input, GlobalAveragePooling2D, Dense
 from keras.layers.advanced_activations import LeakyReLU
+from keras.activations import softmax
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.regularizers import l2
@@ -57,7 +58,8 @@ def darknet19(input_shape, output_len):
     x = bottleneck_x2_block(x, 512, 256)
     x = MaxPooling2D()(x)
     x = bottleneck_x2_block(x, 1024, 512)
-    out = darknet_conv2d(output_len, (1, 1), activation='softmax')(x)
+    x = darknet_conv2d(output_len, (1, 1), activation='softmax')(x)
+    out = GlobalAveragePooling2D()(x)
 
     return Model(inputs, out)
 

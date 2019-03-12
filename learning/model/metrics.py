@@ -51,24 +51,13 @@ def f1(y_true, y_pred):
     return 2 * ((pre * rec) / (pre + rec + K.epsilon()))
 
 
-def roc_auc(y_true, y_pred):
+def auc(y_true, y_pred):
     """ROC AUC metric.
 
     Only computes a batch-wise average of ROC AUC score.
 
     For more information see https://www.tensorflow.org/api_docs/python/tf/metrics/auc
     """
-    value, update_op = tf.contrib.metrics.streaming_auc(y_pred, y_true)  # any tensorflow metric
-
-    # find all variables created for this metric
-    metric_vars = [i for i in tf.local_variables() if 'auc_roc' in i.name.split('/')[1]]
-
-    # Add metric variables to GLOBAL_VARIABLES collection.
-    # They will be initialized for new session.
-    for v in metric_vars:
-        tf.add_to_collection(tf.GraphKeys.GLOBAL_VARIABLES, v)
-
-    # force to update metric values
-    with tf.control_dependencies([update_op]):
-        value = tf.identity(value)
-        return value
+    auc = tf.metrics.auc(y_true, y_pred)[1]
+    K.get_session().run(tf.local_variables_initializer())
+    return auc

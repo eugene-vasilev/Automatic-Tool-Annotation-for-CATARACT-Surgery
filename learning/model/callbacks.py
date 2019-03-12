@@ -1,6 +1,7 @@
 import numpy as np
 from keras.callbacks import Callback, ModelCheckpoint, EarlyStopping, TensorBoard, CSVLogger
 from keras import backend as K
+from preparation.utils import create_dir
 
 
 class CyclicLR(Callback):
@@ -119,6 +120,7 @@ class CyclicLR(Callback):
         else:
             K.set_value(self.model.optimizer.lr, self.clr())
 
+
     def on_batch_end(self, epoch, logs=None):
         logs = logs or {}
         self.trn_iterations += 1
@@ -133,17 +135,30 @@ class CyclicLR(Callback):
         K.set_value(self.model.optimizer.lr, self.clr())
 
 
-def make_callbacks(min_lr, max_lr, step_size, mode, tensorboard):
-    logger_path = './'  # fix it
-    csv_logger = CSVLogger(logger_path, separator=',', append=False)
+def make_callbacks(model_name, min_lr, max_lr, step_size, tensorboard, mode='triangular'):
+    logger_path = 'learning/logs/'
+    checkpoint_path = 'learning/model/saved_models/{}/'.format(model_name)
+    tensorboard_dir = 'learning/boards/{}/'.format(model_name)
+    create_dir(logger_path)
+    create_dir(checkpoint_path)
+    create_dir(tensorboard_dir)
+    csv_logger = CSVLogger(logger_path + '{}.csv'.format(model_name), separator=',', append=False)
     early_stopper = EarlyStopping(monitor='val_loss', verbose=1, patience=20)
     cycle_lr = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, mode=mode)
-    checkpointer = ModelCheckpoint(filepath='', monitor='val_loss', verbose=1, save_best_only=True)  # fix it
+    checkpointer = ModelCheckpoint(filepath=checkpoint_path +
+                                   'E:{epoch:02d} |' +
+                                   'loss: {val_loss:.3f} |' +
+                                   'auc: {val_auc:.3f} |' +
+                                   'f1:{val_f1:.3f} |' +
+                                   'prec:{val_precision:.3f} |' +
+                                   'rec:{val_recall:.3f}.hdf5',
+                                   monitor='val_loss',
+                                   verbose=1,
+                                   save_best_only=True)
 
     callbacks = [csv_logger, early_stopper, cycle_lr, checkpointer]
 
     if tensorboard:
-        tensorboard_dir = './'  # fix it
         tensorboard = TensorBoard(log_dir=tensorboard_dir, write_images=True)
         callbacks.append(tensorboard)
 
