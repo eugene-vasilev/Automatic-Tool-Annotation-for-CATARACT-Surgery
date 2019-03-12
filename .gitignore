@@ -3,6 +3,8 @@
 
 # custom
 learning/data/
+learning/boards/
+learning/logs/
 learning/model/saved_models/
 
 # Byte-compiled / optimized / DLL files
