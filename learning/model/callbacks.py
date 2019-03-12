@@ -151,7 +151,8 @@ def make_callbacks(model_name, min_lr, max_lr, step_size, tensorboard, mode='tri
                                    'auc: {val_auc:.3f} |' +
                                    'f1:{val_f1:.3f} |' +
                                    'prec:{val_precision:.3f} |' +
-                                   'rec:{val_recall:.3f}.hdf5',
+                                   'rec:{val_recall:.3f} |' +
+                                   'acc: {val_acc:.3f}.hdf5',
                                    monitor='val_loss',
                                    verbose=1,
                                    save_best_only=True)
