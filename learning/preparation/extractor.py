@@ -1,5 +1,5 @@
 import pandas as pd
-from learning.preparation.utils import create_dir, get_snake_case
+from learning.preparation.utils import create_dir, get_snake_case, remove_dir
 import cv2
 from glob import glob
 import argparse
@@ -27,7 +27,7 @@ def get_tools_frequency_split(frequency_threshold):
 
 
 def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
-                              no_tools_frames_count, column_names=None, delimiter=1):
+                              no_tools_frames_count, column_names=None, delimiter=4):
     csv_path, video_path = files
     video_name = video_path[video_path.rfind('/') + 1:]
     print('{} in processing'.format(video_name))
@@ -91,6 +91,7 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
 
 
 def extract_frames(args):
+    remove_dir('./learning/data/extracted_frames/')
     videos = glob('./learning/data/train/*.mp4')
     csvs = glob('./learning/data/train_labels/*.csv')
     videos.sort()

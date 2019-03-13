@@ -21,19 +21,19 @@ class Processor:
         self.columns = columns_to_index
 
     def process(self, imgs_paths, augment=True):
-        new_imgs = np.zeros((self.batch_size, self.height, self.width, 3))
-        new_labels = np.zeros((self.batch_size, 22))
+        new_imgs = np.zeros((self.batch_size, self.height, self.width, 3), dtype=np.float32)
+        new_labels = np.zeros((self.batch_size, 22), dtype=np.float32)
         if not len(imgs_paths):
             return new_imgs, new_labels
 
         for i in range(0, len(imgs_paths)):
-            img = cv2.imread(imgs_paths[i])
+            img = cv2.imread(imgs_paths[i], 1)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             img = Augmentor().augment(img) if augment else img
             new_imgs[i] = img
             current_class = get_class_from_path(imgs_paths[i])
-            new_labels[i][self.columns[current_class]] = 1
+            new_labels[i][self.columns[current_class]] = 1.
 
-        new_imgs = new_imgs.astype(np.float32)
         new_imgs /= 255
 
         return new_imgs, new_labels

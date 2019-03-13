@@ -20,9 +20,9 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', type=str, default='darknet53',
                         choices=['darknet19', 'darknet53', 'resnet50', 'mobilenetv2', 'xception', 'inceptionv3'],
                         help='CNN architecture')
-    parser.add_argument('--width', type=int, default=960,
+    parser.add_argument('--width', type=int, default=480,
                         help='Image width')
-    parser.add_argument('--height', type=int, default=540,
+    parser.add_argument('--height', type=int, default=270,
                         help='Image height')
     parser.add_argument('-b', '--batch', type=int, default=128,
                         help='Batch size')
@@ -50,7 +50,6 @@ if __name__ == '__main__':
     validation_imgs_paths = glob(validation_imgs_folder)
 
     processor = Processor(args.batch, args.width, args.height)
-
     train_imgs_paths = processor.delete_empty_files(train_imgs_paths, train_imgs_folder)
     validation_imgs_paths = processor.delete_empty_files(validation_imgs_paths, validation_imgs_folder)
 
@@ -87,9 +86,10 @@ if __name__ == '__main__':
     print('Make callbacks')
 
     current_datetime = datetime.now()
-    model_name = '{}_{}-{}-{} {}:{}:{}'.format(args.model, current_datetime.day, current_datetime.month,
-                                               current_datetime.year, current_datetime.hour,
-                                               current_datetime.minute, current_datetime.second)
+    model_name = '{}_{}-{}-{}_{}:{}:{}_{}x{}'.format(args.model, current_datetime.day, current_datetime.month,
+                                                     current_datetime.year, current_datetime.hour,
+                                                     current_datetime.minute, current_datetime.second,
+                                                     args.height, args.width)
 
     callbacks = make_callbacks(model_name, args.min_lr, args.max_lr, len(train_seq), args.tensorboard)
 

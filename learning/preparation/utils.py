@@ -1,4 +1,5 @@
 import os
+import shutil
 from glob import glob
 
 
@@ -25,3 +26,8 @@ def get_class_from_path(path):
     end = path.rfind('/')
     start = path[:end].rfind('/') + 1
     return path[start:end]
+
+
+def remove_dir(path):  
+    if os.path.isdir(path):
+        shutil.rmtree(path)
