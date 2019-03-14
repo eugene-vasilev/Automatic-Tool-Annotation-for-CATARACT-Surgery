@@ -38,7 +38,7 @@ if __name__ == '__main__':
                         help='Choose the gpu count')
     parser.add_argument('--epochs', type=int, default=500,
                         help='Number of epochs')
-    parser.add_argument('--steps_multiplier', type=int, default=2,
+    parser.add_argument('--steps_multiplier', type=int, default=4,
                         help='Multiplier value for Cyclic LR')
 
     args = parser.parse_args()

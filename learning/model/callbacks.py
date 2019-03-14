@@ -6,6 +6,7 @@ from preparation.utils import create_dir
 
 class CyclicLR(Callback):
     """This callback implements a cyclical learning rate policy (CLR).
+
     The method cycles the learning rate between two boundaries with
     some constant frequency, as detailed in this paper (https://arxiv.org/abs/1506.01186).
     The amplitude of the cycle can be scaled on a per-iteration or
@@ -93,6 +94,7 @@ class CyclicLR(Callback):
 
     def _reset(self, new_base_lr=None, new_max_lr=None, new_step_size=None):
         """Reset cycle iterations.
+
         Optional boundary/step size adjustment.
         """
         if new_base_lr is not None:
@@ -120,7 +122,6 @@ class CyclicLR(Callback):
         else:
             K.set_value(self.model.optimizer.lr, self.clr())
 
-
     def on_batch_end(self, epoch, logs=None):
         logs = logs or {}
         self.trn_iterations += 1
@@ -143,7 +144,7 @@ def make_callbacks(model_name, min_lr, max_lr, step_size, tensorboard, mode='tri
     create_dir(checkpoint_path)
     create_dir(tensorboard_dir)
     csv_logger = CSVLogger(logger_path + '{}.csv'.format(model_name), separator=',', append=False)
-    early_stopper = EarlyStopping(monitor='val_loss', verbose=1, patience=10)
+    early_stopper = EarlyStopping(monitor='val_loss', verbose=1, patience=12)
     cycle_lr = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, mode=mode)
     checkpointer = ModelCheckpoint(filepath=checkpoint_path +
                                    'E:{epoch:02d} |' +
