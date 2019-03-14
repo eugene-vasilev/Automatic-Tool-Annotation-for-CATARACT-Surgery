@@ -24,7 +24,7 @@ if __name__ == '__main__':
                         help='Image width')
     parser.add_argument('--height', type=int, default=270,
                         help='Image height')
-    parser.add_argument('-b', '--batch', type=int, default=128,
+    parser.add_argument('-b', '--batch', type=int, default=32,
                         help='Batch size')
     parser.add_argument('-t', '--tensorboard', action='store_true', default=False,
                         help='Use tensorboard callback')

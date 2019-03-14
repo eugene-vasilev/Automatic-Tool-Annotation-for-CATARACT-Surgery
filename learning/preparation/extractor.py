@@ -129,7 +129,7 @@ if __name__ == '__main__':
                         type=int, default=12,
                         help='Number of processes')
     parser.add_argument('-d', '--delimiter',
-                        type=int, default=2,
+                        type=int, default=4,
                         help='Delimiter for image height and width')
 
     args = parser.parse_args()

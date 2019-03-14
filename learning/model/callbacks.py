@@ -143,7 +143,7 @@ def make_callbacks(model_name, min_lr, max_lr, step_size, tensorboard, mode='tri
     create_dir(checkpoint_path)
     create_dir(tensorboard_dir)
     csv_logger = CSVLogger(logger_path + '{}.csv'.format(model_name), separator=',', append=False)
-    early_stopper = EarlyStopping(monitor='val_loss', verbose=1, patience=20)
+    early_stopper = EarlyStopping(monitor='val_loss', verbose=1, patience=10)
     cycle_lr = CyclicLR(base_lr=min_lr, max_lr=max_lr, step_size=step_size, mode=mode)
     checkpointer = ModelCheckpoint(filepath=checkpoint_path +
                                    'E:{epoch:02d} |' +
