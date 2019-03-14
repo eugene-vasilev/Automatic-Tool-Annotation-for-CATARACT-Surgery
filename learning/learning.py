@@ -29,15 +29,17 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--tensorboard', action='store_true', default=False,
                         help='Use tensorboard callback')
     parser.add_argument('--max_lr', type=float, default=0.001,
-                        help='Max learning rate for Cyclir LR')
+                        help='Max learning rate for Cyclic LR')
     parser.add_argument('--min_lr', type=float, default=0.000001,
-                        help='Min learning rate for Cyclir LR')
+                        help='Min learning rate for Cyclic LR')
     parser.add_argument('--workers', type=int, default=12,
                         help='Number of processes')
     parser.add_argument('--multi_gpu', type=int, default=1,
                         help='Choose the gpu count')
     parser.add_argument('--epochs', type=int, default=500,
                         help='Number of epochs')
+    parser.add_argument('--steps_multiplier', type=int, default=2,
+                        help='Multiplier value for Cyclic LR')
 
     args = parser.parse_args()
 
@@ -91,7 +93,8 @@ if __name__ == '__main__':
                                                      current_datetime.minute, current_datetime.second,
                                                      args.height, args.width)
 
-    callbacks = make_callbacks(model_name, args.min_lr, args.max_lr, len(train_seq), args.tensorboard)
+    callbacks = make_callbacks(model_name, args.min_lr, args.max_lr,
+                               len(train_seq) * args.steps_multiplier, args.tensorboard)
 
     train_steps = len(train_seq)
     validation_steps = len(validation_seq)

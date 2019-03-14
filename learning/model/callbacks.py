@@ -63,7 +63,7 @@ class CyclicLR(Callback):
             iterations since start of cycle). Default is 'cycle'.
     """
 
-    def __init__(self, base_lr=1e-5, max_lr=1e-2, step_size=1000., mode='triangular',
+    def __init__(self, base_lr=1e-6, max_lr=1e-3, step_size=1000., mode='triangular',
                  gamma=1., scale_fn=None, scale_mode='cycle'):
         super(CyclicLR, self).__init__()
 
