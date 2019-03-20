@@ -1,4 +1,4 @@
-from model.network_base import darknet19, darknet53, resnet50, mobilenetv2, xception, inceptionv3
+from model.network_base import darknet19, darknet53, resnet50, mobilenetv2, inceptionv3
 from model.metrics import auc, precision, recall, f1
 from model.callbacks import make_callbacks
 import argparse
@@ -70,8 +70,6 @@ if __name__ == '__main__':
         model = resnet50((args.height, args.width, 3), 22)
     elif args.model == 'mobilenetv2':
         model = mobilenetv2((args.height, args.width, 3), 22)
-    elif args.model == 'xception':
-        model = xception((args.height, args.width, 3), 22)
     elif args.model == 'inceptionv3':
         model = inceptionv3((args.height, args.width, 3), 22)
 

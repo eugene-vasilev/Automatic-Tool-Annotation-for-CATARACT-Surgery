@@ -1,11 +1,9 @@
 from keras.applications.resnet50 import ResNet50
-from keras.applications.xception import Xception
 from keras.applications.inception_v3 import InceptionV3
 from keras.applications.mobilenetv2 import MobileNetV2
 
 from keras.layers import Conv2D, Add, ZeroPadding2D, MaxPooling2D, Input, GlobalAveragePooling2D, Dense
 from keras.layers.advanced_activations import LeakyReLU
-from keras.activations import softmax
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.regularizers import l2
@@ -97,10 +95,6 @@ def resnet50(input_shape, output_len):
 
 def mobilenetv2(input_shape, output_len):
     return MobileNetV2(weights=None, input_shape=input_shape, classes=output_len)
-
-
-def xception(input_shape, output_len):
-    return Xception(weights=None, input_shape=input_shape, classes=output_len)
 
 
 def inceptionv3(input_shape, output_len):
