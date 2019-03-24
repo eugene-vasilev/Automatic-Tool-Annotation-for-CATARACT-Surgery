@@ -22,8 +22,7 @@ def resave_model(model_path, save_path):
     save_weights(model, save_path + '/model.h5')
 
 if __name__ == '__main__':
-
-    model_folders = glob('./saved_models/*')
+    model_folders = glob('./learning/model/saved_models/*')
     print(model_folders)
     for model_folder in model_folders:
         models = sorted(glob(model_folder + '/*.hdf5'))
