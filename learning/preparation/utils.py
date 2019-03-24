@@ -5,7 +5,10 @@ from glob import glob
 
 def create_dir(path):
     if not os.path.exists(path):
-        os.makedirs(path)
+        try:
+            os.makedirs(path)
+        except Exception:
+            pass
         print('Folder is created: {}'.format(path))
 
 
