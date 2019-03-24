@@ -1,2 +1,0 @@
-# MMdnn
-# nn-transfer
