@@ -102,6 +102,8 @@ if __name__ == '__main__':
     validation_descs_paths = glob(validation_descs_folder)
 
     x_train, y_train, x_test, y_test = get_cupy_split(train_descs_paths, validation_descs_paths, args.workers)
+    x_train = np.reshape(x_train, x_train.shape[:-1])
+    x_test = np.reshape(x_test, x_test.shape[:-1])
 
     train_and_compute_misclassification('rbf', {'sigma': 7}, 'ovr', x_train, y_train, x_test, y_test,
                                         use_optimal_lambda=True)
