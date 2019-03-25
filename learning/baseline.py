@@ -29,20 +29,16 @@ def get_cupy_split(train_paths, test_paths, workers):
         train_set = pool.map(read_npy, train_paths)
         test_set = pool.map(read_npy, test_paths)
 
-    return train_set
-    '''
-    print(len(train_set), len(train_set[0]), len(train_set[1]))
-
-    train_descs, train_labels = train_set[:, 0], train_set[:, 1]
-    test_descs, test_labels = test_set[:, 0], test_set[:, 1]
+    train_descs = [x[0] for x in train_set]
+    test_descs = [x[0] for x in test_set]
+    train_labels = [x[1] for x in train_set]
+    test_labels = [x[1] for x in test_set]
 
     train_descs, train_labels = cp.array(train_descs), cp.array(train_labels)
     test_descs, test_labels = cp.array(test_descs), cp.array(test_labels)
-
     gc.collect()
 
     return train_descs, train_labels, test_descs, test_labels
-    '''
 
 def train_and_compute_misclassification(kernel, kernel_params, classification_strategy, x_train, y_train,
                                         x_test, y_test, lambduh=1, use_optimal_lambda=False,
@@ -105,7 +101,7 @@ if __name__ == '__main__':
     train_descs_paths = glob(train_descs_folder)
     validation_descs_paths = glob(validation_descs_folder)
 
-    x_set = get_cupy_split(train_descs_paths, validation_descs_paths, args.workers)
+    x_train, y_train, x_test, y_test = get_cupy_split(train_descs_paths, validation_descs_paths, args.workers)
 
-    #train_and_compute_misclassification('rbf', {'sigma': 7}, 'ovr', x_train, y_train, x_test, y_test,
-                                        #use_optimal_lambda=True)
+    train_and_compute_misclassification('rbf', {'sigma': 7}, 'ovr', x_train, y_train, x_test, y_test,
+                                        use_optimal_lambda=True)
