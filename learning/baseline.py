@@ -1,4 +1,4 @@
-from learning.model.svm import SVM
+from model.svm import SVM
 # from sklearn.model_selection import GridSearchCV
 import cv2
 import argparse
