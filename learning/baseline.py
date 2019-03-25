@@ -66,39 +66,44 @@ if __name__ == '__main__':
 
     parser.add_argument('-w', '--workers', type=int, default=12,
                         help='Number of processes')
+    parser.add_argument('-s', '--step', type=int, default=2,
+                        choices=[0, 1, 2],
+                        help='Step of main to run: 0=all, 1=Extract&Save hog descs, 2=Train SVC')
 
     args = parser.parse_args()
 
-    train_imgs_folder = 'learning/data/extracted_frames/*/*/*.jpg'
-    train_imgs_paths = glob(train_imgs_folder)
+    if not args.step or args.step % 2:
+        train_imgs_folder = 'learning/data/extracted_frames/*/*/*.jpg'
+        train_imgs_paths = glob(train_imgs_folder)
 
-    hog_extractor = HogExtractor()
+        hog_extractor = HogExtractor()
 
-    remove_dir('learning/data/hog_descs')
+        remove_dir('learning/data/hog_descs')
 
-    with Pool(processes=args.workers) as pool:
-        pool.map(hog_extractor.get_hog_descriptor, train_imgs_paths)
+        with Pool(processes=args.workers) as pool:
+            pool.map(hog_extractor.get_hog_descriptor, train_imgs_paths)
 
-    del train_imgs_paths
+        del train_imgs_paths
 
-    train_descs_folder = 'learning/data/hog_descs/train/*/*.npy'
-    validation_descs_folder = 'learning/data/hog_descs/validation/*/*.npy'
-    train_descs_paths = glob(train_descs_folder)
-    validation_descs_paths = glob(validation_descs_folder)
+    if not args.step or not args.step % 2:
+        train_descs_folder = 'learning/data/hog_descs/train/*/*.npy'
+        validation_descs_folder = 'learning/data/hog_descs/validation/*/*.npy'
+        train_descs_paths = glob(train_descs_folder)
+        validation_descs_paths = glob(validation_descs_folder)
 
-    x_train, y_train, x_test, y_test = get_descs_split(train_descs_paths, validation_descs_paths, args.workers)
+        x_train, y_train, x_test, y_test = get_descs_split(train_descs_paths, validation_descs_paths, args.workers)
 
-    clf = OneVsRestClassifier(SVC(kernel='linear', probability=True, random_state=15))
+        clf = OneVsRestClassifier(SVC(probability=True, random_state=15), n_jobs=-1)
 
-    y_score = clf.fit(x_train, y_train).decision_function(x_test)
+        y_score = clf.fit(x_train, y_train).decision_function(x_test)
 
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-    for i in range(22):
-        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+        for i in range(22):
+            fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+            roc_auc[i] = auc(fpr[i], tpr[i])
 
-#    Compute micro-average ROC curve and ROC area
-    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
-    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+    #    Compute micro-average ROC curve and ROC area
+        fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
+        roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
