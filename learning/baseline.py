@@ -6,7 +6,7 @@ from glob import glob
 from multiprocessing.pool import ThreadPool as Pool
 import numpy as np
 import cupy as cp
-import pd
+import pandas as pd
 import gc
 from preparation.utils import create_dir, remove_dir, get_snake_case
 

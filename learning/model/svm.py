@@ -3,7 +3,7 @@ import cupy as xp
 import scipy.linalg
 import pandas as pd
 import matplotlib.pyplot as plt
-import models.kernels as kernels
+import model.kernels as kernels
 import itertools
 
 
