@@ -73,7 +73,7 @@ class HogExtractor:
         folder = new_file_name[:new_file_name.rfind('/')]
         create_dir(folder)
 
-        np.save(new_file_name, self.hog.compute(img, (230, 230), (15, 15)))
+        np.save(new_file_name, self.hog.compute(img, (450, 450), (15, 15)))
 
 
 if __name__ == '__main__':
