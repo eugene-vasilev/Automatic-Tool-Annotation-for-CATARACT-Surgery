@@ -26,8 +26,11 @@ def read_npy(path):
 
 def get_cupy_split(train_paths, test_paths, workers):
     with Pool(processes=workers) as pool:
-        train_descs, train_labels = pool.map(read_npy, train_paths)
-        test_descs, test_labels = pool.map(read_npy, test_paths)
+        train_set = pool.map(read_npy, train_paths)
+        test_set = pool.map(read_npy, test_paths)
+
+    train_descs, train_labels = train_set[:, 0], train_set[:, 1]
+    test_descs, test_labels = test_set[:, 0], test_set[:, 1]
 
     train_descs, train_labels = cp.array(train_descs), cp.array(train_labels)
     test_descs, test_labels = cp.array(test_descs), cp.array(test_labels)
