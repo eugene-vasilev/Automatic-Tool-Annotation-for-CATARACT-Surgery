@@ -1,11 +1,11 @@
-from model.svm import SVM
-# from sklearn.model_selection import GridSearchCV
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.metrics import roc_curve, auc
+from sklearn.svm import SVC
 import cv2
 import argparse
 from glob import glob
 from multiprocessing.pool import ThreadPool as Pool
 import numpy as np
-import cupy as cp
 import pandas as pd
 import gc
 from preparation.utils import create_dir, remove_dir, get_snake_case
@@ -24,36 +24,21 @@ def read_npy(path):
     return img, label
 
 
-def get_cupy_split(train_paths, test_paths, workers):
+def get_descs_split(train_paths, test_paths, workers):
     with Pool(processes=workers) as pool:
         train_set = pool.map(read_npy, train_paths)
         test_set = pool.map(read_npy, test_paths)
 
-    train_descs = [x[0] for x in train_set]
-    test_descs = [x[0] for x in test_set]
+    train_descs = [np.reshape(x[0], x[0].shape[:-1]) for x in train_set]
+    test_descs = [np.reshape(x[0], x[0].shape[:-1]) for x in test_set]
     train_labels = [x[1] for x in train_set]
     test_labels = [x[1] for x in test_set]
 
-    train_descs, train_labels = cp.array(train_descs), cp.array(train_labels)
-    test_descs, test_labels = cp.array(test_descs), cp.array(test_labels)
+    train_descs, train_labels = np.array(train_descs), np.array(train_labels)
+    test_descs, test_labels = np.array(test_descs), np.array(test_labels)
     gc.collect()
 
     return train_descs, train_labels, test_descs, test_labels
-
-def train_and_compute_misclassification(kernel, kernel_params, classification_strategy, x_train, y_train,
-                                        x_test, y_test, lambduh=1, use_optimal_lambda=False,
-                                        n_folds=3, max_iter=200):
-    print('svm-gpu, {} kernel, parameters {}'.format(kernel, kernel_params))
-    svm = SVM(kernel, kernel_params, lambduh, max_iter, classification_strategy, x=x_train, y=y_train,
-              n_folds=n_folds, display_plots=True)
-
-    svm.fit(x_train, y_train, use_optimal_lambda=use_optimal_lambda)
-    if svm._classification_strategy == 'binary':
-        svm.plot_misclassification_error()
-
-    misclassification_error = svm.compute_misclassification_error(x_test, y_test)
-    print('Misclassification error (test), {}, {}lambda = {} : {}\n'.format(svm._classification_strategy,
-          ('optimal ' if use_optimal_lambda else ''), svm._lambduh, misclassification_error))
 
 
 class HogExtractor:
@@ -101,9 +86,19 @@ if __name__ == '__main__':
     train_descs_paths = glob(train_descs_folder)
     validation_descs_paths = glob(validation_descs_folder)
 
-    x_train, y_train, x_test, y_test = get_cupy_split(train_descs_paths, validation_descs_paths, args.workers)
-    x_train = np.reshape(x_train, x_train.shape[:-1])
-    x_test = np.reshape(x_test, x_test.shape[:-1])
+    x_train, y_train, x_test, y_test = get_descs_split(train_descs_paths, validation_descs_paths, args.workers)
 
-    train_and_compute_misclassification('rbf', {'sigma': 7}, 'ovr', x_train, y_train, x_test, y_test,
-                                        use_optimal_lambda=True)
+    clf = OneVsRestClassifier(SVC(kernel='linear', probability=True, random_state=15))
+
+    y_score = clf.fit(x_train, y_train).decision_function(x_test)
+
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(22):
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+#    Compute micro-average ROC curve and ROC area
+    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
