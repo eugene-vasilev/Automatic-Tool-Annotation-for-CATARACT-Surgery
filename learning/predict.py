@@ -90,6 +90,9 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--delimiter',
                         type=int, default=4,
                         help='Delimiter for image height and width')
+    parser.add_argument('-dp', '--data_part', type=str,
+                        choices=['train', 'test'], default='test',
+                        help='Choose part of dataset videos to predict')
 
     args = parser.parse_args()
 
@@ -102,5 +105,7 @@ if __name__ == '__main__':
 
     model_name = args.model_folder[args.model_folder.rfind('/') + 1:]
 
-    for i in train_video_paths:
-        construct_predictions_dataframe(i, model, args.delimiter, model_name)
+    target_video_paths = train_video_paths if args.data_part == 'train' else test_video_paths
+
+    for video_path in target_video_paths:
+        construct_predictions_dataframe(video_path, model, args.delimiter, model_name)
