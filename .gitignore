@@ -5,6 +5,7 @@
 learning/data/
 learning/boards/
 learning/logs/
+learning/predictions/
 learning/model/saved_models/
 
 # Byte-compiled / optimized / DLL files
