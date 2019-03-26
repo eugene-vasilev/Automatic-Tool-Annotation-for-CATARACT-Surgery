@@ -6,6 +6,7 @@ from glob import glob
 from keras.models import model_from_json
 from pandas import read_csv
 from sklearn.metrics import roc_curve, auc
+from preparation.utils import create_dir
 
 
 def load_model(model_folder):
@@ -74,8 +75,9 @@ def construct_predictions_dataframe(video_path, model, delimiter, model_name):
         predictions.insert(0, num)
         result_df.loc[num - 1] = predictions
         num += 1
-
-    save_path = './predictions/{}/{}'.format(model_name, video_path[video_path.rfind('/') + 1:])
+    folder = './predictions/{}/'.format(model_name)
+    create_dir(folder)
+    save_path = '{}{}'.format(folder, video_path[video_path.rfind('/') + 1:])
     save_path = save_path.replace('mp4', 'csv')
     result_df.to_csv(save_path, header=False, index=False)
 
