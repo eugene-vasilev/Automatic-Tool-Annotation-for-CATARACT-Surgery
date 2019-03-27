@@ -1,6 +1,6 @@
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import roc_curve, auc
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 import cv2
 import argparse
 from glob import glob
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
         x_train, y_train, x_test, y_test = get_descs_split(train_descs_paths, validation_descs_paths, args.workers)
 
-        clf = OneVsRestClassifier(SVC(probability=True, random_state=15), n_jobs=-1)
+        clf = RandomForestClassifier(n_jobs=-1)
 
         y_score = clf.fit(x_train, y_train).decision_function(x_test)
 
