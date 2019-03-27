@@ -1,4 +1,3 @@
-from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn.ensemble import RandomForestClassifier
 import cv2
@@ -95,7 +94,7 @@ if __name__ == '__main__':
 
         clf = RandomForestClassifier(n_jobs=-1)
 
-        y_score = clf.fit(x_train, y_train).decision_function(x_test)
+        y_score = clf.fit(x_train, y_train).predict_proba(x_test)
 
         fpr = dict()
         tpr = dict()
