@@ -50,7 +50,7 @@ def calculate_auc(original_csv, predicted_csv):
               if 'Usecols' in str(e) else 'Error: {}!'.format(e))
 
 
-def construct_predictions_dataframe(video_path, model, delimiter, model_name):
+def construct_predictions_dataframe(video_path, model, delimiter, model_name, data_part):
     video = cv2.VideoCapture(video_path)
     success, image = video.read()
     num = 1
@@ -75,7 +75,7 @@ def construct_predictions_dataframe(video_path, model, delimiter, model_name):
         predictions.insert(0, num)
         result_df.loc[num - 1] = predictions
         num += 1
-    folder = './predictions/{}/'.format(model_name)
+    folder = './predictions/{}/{}/'.format(model_name, data_part)
     create_dir(folder)
     save_path = '{}{}'.format(folder, video_path[video_path.rfind('/') + 1:])
     save_path = save_path.replace('mp4', 'csv')
@@ -108,4 +108,4 @@ if __name__ == '__main__':
     target_video_paths = train_video_paths if args.data_part == 'train' else test_video_paths
 
     for video_path in target_video_paths:
-        construct_predictions_dataframe(video_path, model, args.delimiter, model_name)
+        construct_predictions_dataframe(video_path, model, args.delimiter, model_name, args.data_part)
