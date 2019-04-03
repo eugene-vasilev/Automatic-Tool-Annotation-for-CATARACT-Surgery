@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-m', '--model', type=str, default='darknet53',
-                        choices=['darknet19', 'darknet53', 'resnet50', 'mobilenetv2', 'xception', 'inceptionv3'],
+                        choices=['darknet19', 'darknet53', 'resnet50', 'mobilenetv2', 'inceptionv3'],
                         help='CNN architecture')
     parser.add_argument('--width', type=int, default=480,
                         help='Image width')
@@ -40,11 +40,26 @@ if __name__ == '__main__':
                         help='Number of epochs')
     parser.add_argument('--steps_multiplier', type=int, default=4,
                         help='Multiplier value for Cyclic LR')
+    parser.add_argument('--distributed', action='store_true', default=False,
+                        help='Needed if run in distributed mode (horovod using)')
 
     args = parser.parse_args()
 
     print("")
     print('Arguments is valid')
+
+    if args.distributed:
+        import tensorflow as tf
+        from keras import backend as K
+        import horovod.keras as hvd
+        hvd.init()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config.gpu_options.visible_device_list = str(hvd.local_rank())
+        K.set_session(tf.Session(config=config))
+
+        args.min_lr *= hvd.size()
+        args.max_lr *= hvd.size()
 
     train_imgs_folder = 'learning/data/extracted_frames/train/*/*.jpg'
     train_imgs_paths = glob(train_imgs_folder)
@@ -59,6 +74,8 @@ if __name__ == '__main__':
 
     train_seq = Seq(train_imgs_paths, args.batch, processor.process)
     validation_seq = Seq(validation_imgs_paths, args.batch, partial(processor.process, augment=False))
+    train_steps = len(train_seq)
+    validation_steps = len(validation_seq)
 
     print('Build and compile model')
 
@@ -78,7 +95,14 @@ if __name__ == '__main__':
 
     model.summary()
 
-    model.compile(optimizer=Adam(lr=args.min_lr),
+    optimizer = Adam(lr=args.min_lr)
+
+    if args.distributed:
+        optimizer = hvd.DistributedOptimizer(optimizer)
+        train_steps //= hvd.size()
+        validation_steps //= hvd.size()
+
+    model.compile(optimizer=optimizer,
                   loss=categorical_crossentropy,
                   metrics=[auc, precision, recall, f1, 'acc']
                   )
@@ -92,10 +116,11 @@ if __name__ == '__main__':
                                                      args.height, args.width)
 
     callbacks = make_callbacks(model_name, args.min_lr, args.max_lr,
-                               len(train_seq) * args.steps_multiplier, args.tensorboard)
+                               train_steps * args.steps_multiplier, args.tensorboard)
 
-    train_steps = len(train_seq)
-    validation_steps = len(validation_seq)
+    if args.distributed:
+        callbacks.insert(0, hvd.callbacks.MetricAverageCallback())
+        callbacks.insert(0, hvd.callbacks.BroadcastGlobalVariablesCallback(0))
 
     model.fit_generator(
         generator=train_seq,
