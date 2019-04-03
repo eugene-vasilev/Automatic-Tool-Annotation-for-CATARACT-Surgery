@@ -1,4 +1,4 @@
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier
 import cv2
 import argparse
 from glob import glob
@@ -37,11 +37,11 @@ def get_hog_descs(train_paths, workers):
 
 
 def save_test_predictions(model):
-    test_video_paths = sorted(glob('./data/test/*.mp4'))
+    test_video_paths = sorted(glob('./learning/data/test/*.mp4'))
     hog_extractor = HogExtractor()
 
     for video_path in test_video_paths:
-        df_columns = list(pd.read_csv('./data/train_labels/train01.csv').columns)
+        df_columns = list(pd.read_csv('./learning/data/train_labels/train01.csv').columns)
         result_df = pd.DataFrame(columns=df_columns)
 
         video = cv2.VideoCapture(video_path)
@@ -55,14 +55,16 @@ def save_test_predictions(model):
                 img = cv2.resize(img, (hog_extractor.width, hog_extractor.height))
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 hog_descriptor = hog_extractor.get_hog_descriptor(img, save=False)
-                predictions = list(model.predict_proba(hog_descriptor)[:-1])
+                hog_descriptor = np.reshape(hog_descriptor, (1, hog_descriptor.shape[0]))
+                predictions = model.predict_proba(hog_descriptor)
+                predictions = np.delete(predictions, len(predictions[0]) - 1, None)
             else:
-                predictions = [0. for _ in range(21)]
+                predictions = np.array([0. for _ in range(21)])
 
-            predictions.insert(0, num)
+            predictions = np.insert(predictions, 0, num)
             result_df.loc[num - 1] = predictions
             num += 1
-        folder = './predictions/{}/{}/'.format('baseline', 'test')
+        folder = './learning/predictions/{}/{}/'.format('baseline', 'test')
         create_dir(folder)
         save_path = '{}{}'.format(folder, video_path[video_path.rfind('/') + 1:])
         save_path = save_path.replace('mp4', 'csv')
@@ -82,10 +84,9 @@ class HogExtractor:
             img = cv2.resize(img, (self.width, self.height))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         elif hasattr(img_source, 'shape'):
-            assert img_source.shape == (self.width, self.height, 3,)
-            img = img.source
+            assert img_source.shape == (self.height, self.width, 3,)
+            img = img_source
         hog_descriptor = self.hog.compute(img, (450, 450), (15, 15))
-
         if not save:
             return hog_descriptor
 
@@ -127,8 +128,8 @@ if __name__ == '__main__':
 
         x_train, y_train = get_hog_descs(train_descs_paths, args.workers)
 
-        random_forest_clf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+        et_clf = ExtraTreesClassifier(n_estimators=100, n_jobs=-1)
 
-        random_forest_clf = random_forest_clf.fit(x_train, y_train)
+        et_clf = et_clf.fit(x_train, y_train)
 
-        save_test_predictions(random_forest_clf)
+        save_test_predictions(et_clf)
