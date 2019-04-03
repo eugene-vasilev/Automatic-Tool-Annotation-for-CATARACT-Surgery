@@ -31,6 +31,6 @@ def get_class_from_path(path):
     return path[start:end]
 
 
-def remove_dir(path):  
+def remove_dir(path):
     if os.path.isdir(path):
         shutil.rmtree(path)
