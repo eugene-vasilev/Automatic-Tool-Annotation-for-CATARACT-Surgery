@@ -14,8 +14,30 @@ from preparation.processing import Processor
 from functools import partial
 
 
-def train(model, width, height, batch, tensorboard, max_lr, min_lr, workers,
-          multi_gpu, epochs, steps_multiplier, distributed, loaded_model=None):
+def validation_evaluate(model, width=480, height=270, batch=32, min_lr=0.000001, workers=12):
+    validation_imgs_folder = 'data/extracted_frames/validation/*/*.jpg'
+    validation_imgs_paths = glob(validation_imgs_folder)
+
+    processor = Processor(batch, width, height)
+    validation_imgs_paths = processor.delete_empty_files(validation_imgs_paths, validation_imgs_folder)
+    validation_seq = Seq(validation_imgs_paths, batch, partial(processor.process, augment=False))
+    validation_steps = len(validation_seq)
+
+    assert model.input_shape[1:] == (height, width, 3)
+    assert model.output_shape[1:] == (22,)
+
+    optimizer = Adam(lr=min_lr)
+    model.compile(optimizer=optimizer,
+                  loss=categorical_crossentropy,
+                  metrics=[auc, precision, recall, f1, 'acc']
+                  )
+
+    return model.evaluate_generator(validation_seq, validation_steps, workers=workers,
+                                    use_multiprocessing=False, verbose=1), model.metrics_names
+
+
+def train(model='darknet19', width=480, height=270, batch=32, tensorboard=False, max_lr=0.001, min_lr=0.000001,
+          workers=12, multi_gpu=1, epochs=500, steps_multiplier=4, distributed=False, loaded_model=None):
     if distributed:
         import tensorflow as tf
         from keras import backend as K
@@ -88,7 +110,7 @@ def train(model, width, height, batch, tensorboard, max_lr, min_lr, workers,
                                                      height, width)
 
     callbacks = make_callbacks(model_name, min_lr, max_lr, train_steps * steps_multiplier,
-                               tensorboard, save=loaded_model)
+                               tensorboard, save=not bool(loaded_model))
 
     if distributed:
         callbacks.insert(0, hvd.callbacks.MetricAverageCallback())
