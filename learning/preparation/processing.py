@@ -14,7 +14,7 @@ class Processor:
         self.batch_size = batch_size
         self.width = width
         self.height = height
-        columns = pd.read_csv('./learning/data/train_labels/train01.csv').columns[1:]
+        columns = pd.read_csv('data/train_labels/train01.csv').columns[1:]
         columns = list(map(lambda x: get_snake_case(x), columns))
         columns_to_index = {column_name: index for (index, column_name) in enumerate(columns)}
         columns_to_index.update({'no_tools': 21})

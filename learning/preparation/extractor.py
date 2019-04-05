@@ -1,5 +1,5 @@
 import pandas as pd
-from learning.preparation.utils import create_dir, get_snake_case, remove_dir
+from preparation.utils import create_dir, get_snake_case, remove_dir
 import cv2
 from glob import glob
 import argparse
@@ -8,7 +8,7 @@ from functools import partial
 
 
 def get_tools_frequency_split(frequency_threshold):
-    csv_paths = glob('./learning/data/train_labels/*.csv')
+    csv_paths = glob('data/train_labels/*.csv')
     tools_frequency = {}
     for csv_path in csv_paths:
         df = pd.read_csv(csv_path)
@@ -56,7 +56,7 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
         target_columns = df_tools.columns[1:]
 
     for column_name in target_columns:
-        folder_path = './learning/data/extracted_frames/{}/{}/'.format(split_name, column_name)
+        folder_path = 'data/extracted_frames/{}/{}/'.format(split_name, column_name)
         df_this_tool = df_tools[df_tools[column_name] == 1]
         create_dir(folder_path)
         frames = df_this_tool['frame']
@@ -67,7 +67,7 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
             for frame in frames[::common_tools_step]:
                 frames_labels.update({int(frame): column_name})
 
-    create_dir('./learning/data/extracted_frames/{}/no_tools/'.format(split_name))
+    create_dir('data/extracted_frames/{}/no_tools/'.format(split_name))
     for frame in df_no_tools['frame'][::no_tools_step]:
         frames_labels.update({int(frame): 'no_tools'})
 
@@ -83,7 +83,7 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
         if num in frame_nums:
             if hasattr(image, 'shape'):
                 frame_nums.remove(num)
-                folder_path = './learning/data/extracted_frames/{}/{}/'.format(split_name, frames_labels[num])
+                folder_path = 'data/extracted_frames/{}/{}/'.format(split_name, frames_labels[num])
                 write_path = folder_path + '{}_{}.jpg'.format(video_num, num)
                 image = cv2.resize(image, (image.shape[1] // delimiter, image.shape[0] // delimiter))
                 cv2.imwrite(write_path, image)
@@ -91,9 +91,9 @@ def extract_frames_from_video(files, rare_tools_threshold, common_tools_step,
 
 
 def extract_frames(args):
-    remove_dir('./learning/data/extracted_frames/')
-    videos = glob('./learning/data/train/*.mp4')
-    csvs = glob('./learning/data/train_labels/*.csv')
+    remove_dir('data/extracted_frames/')
+    videos = glob('data/train/*.mp4')
+    csvs = glob('data/train_labels/*.csv')
     videos.sort()
     csvs.sort()
     videos_length = len(videos)

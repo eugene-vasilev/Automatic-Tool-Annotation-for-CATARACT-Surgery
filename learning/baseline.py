@@ -9,7 +9,7 @@ import gc
 from preparation.utils import create_dir, remove_dir, get_snake_case
 from functools import partial
 
-columns = pd.read_csv('./learning/data/train_labels/train01.csv').columns[1:]
+columns = pd.read_csv('data/train_labels/train01.csv').columns[1:]
 columns = list(map(lambda x: get_snake_case(x), columns))
 columns_to_index = {column_name: index for (index, column_name) in enumerate(columns)}
 columns_to_index.update({'no_tools': 21})
@@ -37,11 +37,11 @@ def get_hog_descs(train_paths, workers):
 
 
 def save_test_predictions(model):
-    test_video_paths = sorted(glob('./learning/data/test/*.mp4'))
+    test_video_paths = sorted(glob('data/test/*.mp4'))
     hog_extractor = HogExtractor()
 
     for video_path in test_video_paths:
-        df_columns = list(pd.read_csv('./learning/data/train_labels/train01.csv').columns)
+        df_columns = list(pd.read_csv('data/train_labels/train01.csv').columns)
         result_df = pd.DataFrame(columns=df_columns)
 
         video = cv2.VideoCapture(video_path)
@@ -64,7 +64,7 @@ def save_test_predictions(model):
             predictions = np.insert(predictions, 0, num)
             result_df.loc[num - 1] = predictions
             num += 1
-        folder = './learning/predictions/{}/{}/'.format('baseline', 'test')
+        folder = 'predictions/{}/{}/'.format('baseline', 'test')
         create_dir(folder)
         save_path = '{}{}'.format(folder, video_path[video_path.rfind('/') + 1:])
         save_path = save_path.replace('mp4', 'csv')
@@ -110,12 +110,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not args.step or args.step % 2:
-        train_imgs_folder = 'learning/data/extracted_frames/*/*/*.jpg'
+        train_imgs_folder = 'data/extracted_frames/*/*/*.jpg'
         train_imgs_paths = glob(train_imgs_folder)
 
         hog_extractor = HogExtractor()
 
-        remove_dir('learning/data/hog_descs')
+        remove_dir('data/hog_descs')
 
         with Pool(processes=args.workers) as pool:
             pool.map(partial(hog_extractor.get_hog_descriptor, save=True), train_imgs_paths)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
         del train_imgs_paths
 
     if not args.step or not args.step % 2:
-        train_descs_folder = 'learning/data/hog_descs/*/*/*.npy'
+        train_descs_folder = 'data/hog_descs/*/*/*.npy'
         train_descs_paths = glob(train_descs_folder)
 
         x_train, y_train = get_hog_descs(train_descs_paths, args.workers)
