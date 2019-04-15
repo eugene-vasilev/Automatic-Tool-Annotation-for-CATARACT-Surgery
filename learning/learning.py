@@ -15,13 +15,7 @@ from functools import partial
 
 
 def validation_evaluate(model, width=480, height=270, batch=32, min_lr=0.000001, workers=12):
-    validation_imgs_folder = 'data/extracted_frames/validation/*/*.jpg'
-    validation_imgs_paths = glob(validation_imgs_folder)
-
-    processor = Processor(batch, width, height)
-    validation_imgs_paths = processor.delete_empty_files(validation_imgs_paths, validation_imgs_folder)
-    validation_seq = Seq(validation_imgs_paths, batch, partial(processor.process, augment=False))
-    validation_steps = len(validation_seq)
+    _, validation_seq = get_generators(width, height, batch)
 
     assert model.input_shape[1:] == (height, width, 3)
     assert model.output_shape[1:] == (22,)
@@ -32,8 +26,26 @@ def validation_evaluate(model, width=480, height=270, batch=32, min_lr=0.000001,
                   metrics=[auc, precision, recall, f1, 'acc']
                   )
 
-    return model.evaluate_generator(validation_seq, validation_steps, workers=workers,
+    return model.evaluate_generator(validation_seq, len(validation_seq), workers=workers,
                                     use_multiprocessing=False, verbose=1), model.metrics_names
+
+
+def get_generators(width, height, batch):
+    train_imgs_folder = 'data/extracted_frames/train/*/*.jpg'
+    train_imgs_paths = glob(train_imgs_folder)
+    validation_imgs_folder = 'data/extracted_frames/validation/*/*.jpg'
+    validation_imgs_paths = glob(validation_imgs_folder)
+
+    processor = Processor(batch, width, height)
+    train_imgs_paths = processor.delete_empty_files(train_imgs_paths, train_imgs_folder)
+    validation_imgs_paths = processor.delete_empty_files(validation_imgs_paths, validation_imgs_folder)
+
+    print('Make generators')
+
+    train_seq = Seq(train_imgs_paths, batch, processor.process)
+    validation_seq = Seq(validation_imgs_paths, batch, partial(processor.process, augment=False))
+
+    return train_seq, validation_seq
 
 
 def train(model='darknet19', width=480, height=270, batch=32, tensorboard=False, max_lr=0.001, min_lr=0.000001,
@@ -51,19 +63,7 @@ def train(model='darknet19', width=480, height=270, batch=32, tensorboard=False,
         min_lr *= hvd.size()
         max_lr *= hvd.size()
 
-    train_imgs_folder = 'data/extracted_frames/train/*/*.jpg'
-    train_imgs_paths = glob(train_imgs_folder)
-    validation_imgs_folder = 'data/extracted_frames/validation/*/*.jpg'
-    validation_imgs_paths = glob(validation_imgs_folder)
-
-    processor = Processor(batch, width, height)
-    train_imgs_paths = processor.delete_empty_files(train_imgs_paths, train_imgs_folder)
-    validation_imgs_paths = processor.delete_empty_files(validation_imgs_paths, validation_imgs_folder)
-
-    print('Make generators')
-
-    train_seq = Seq(train_imgs_paths, batch, processor.process)
-    validation_seq = Seq(validation_imgs_paths, batch, partial(processor.process, augment=False))
+    train_seq, validation_seq = get_generators(width, height, batch)
     train_steps = len(train_seq)
     validation_steps = len(validation_seq)
 
