@@ -5,6 +5,7 @@ All information about tasks, goals, data and etc. see on competition page https:
 ## Local deployment
 
 	$ git clone https://github.com/evgeniivas/Masters-Work.git
+	$ cd Masters-Work
 	$ pip3 install -r requirements.txt
 
 ### Data
