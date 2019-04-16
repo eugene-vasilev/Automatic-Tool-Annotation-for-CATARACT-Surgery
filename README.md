@@ -1,4 +1,4 @@
-# Automatic Tool Annotation for cataRACT Surgery: Masters Work
+# Automatic Tool Annotation for Surgical Workflow Analysis: Masters Work
 
 All information about tasks, goals, data and etc. see on competition page https://cataracts.grand-challenge.org/
 
