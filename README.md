@@ -18,6 +18,7 @@ All scripts for making classification models and data processing can be run from
 
 1. Run `/preparation/extractor.py` script to prepare data for learning, set the params;
 2. To learn models run `learning.py` script, set the params;
+	* To run training on cluster (distributed systems): set `--distributed` parameter;
 3. Make predictions to train\test datasets: run `predict.py` script, set the params;
 4. Make baseline model (ExtraTreesClassifier trained using HOG descriptors) and predict on test dataset:<br/> 
 run `baseline.py` script, set the params;
