@@ -1,11 +1,14 @@
 absl-py==0.7.1
 astor==0.7.1
 backcall==0.1.0
+cffi==1.12.2
+cloudpickle==0.8.1
 decorator==4.4.0
 gast==0.2.2
 graphviz==0.10.1
 grpcio==1.19.0
 h5py==2.9.0
+horovod==0.16.1
 ipython==7.4.0
 ipython-genutils==0.2.0
 jedi==0.13.3
@@ -25,7 +28,9 @@ pickleshare==0.7.5
 Pillow==6.0.0
 prompt-toolkit==2.0.9
 protobuf==3.7.1
+psutil==5.6.1
 ptyprocess==0.6.0
+pycparser==2.19
 Pygments==2.3.1
 python-dateutil==2.8.0
 pytz==2019.1
