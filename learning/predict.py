@@ -52,7 +52,7 @@ def calculate_auc(original_csv, predicted_csv):
 
 def construct_predictions_dataframe(video_path, model, delimiter, model_name, data_part):
     video = cv2.VideoCapture(video_path)
-    success, image = video.read()
+    success, img = video.read()
     num = 1
     success = True
 
@@ -93,19 +93,54 @@ if __name__ == '__main__':
     parser.add_argument('-dp', '--data_part', type=str,
                         choices=['train', 'test'], default='test',
                         help='Choose part of dataset videos to predict')
+    parser.add_argument('-s', '--video_source', type=str,
+                        help='Path to video that will be full predicted by choosen model')
 
     args = parser.parse_args()
 
     args.model_folder = args.model_folder[:-1] if args.model_folder[-1] == '/' else args.model_folder
 
-    test_video_paths = sorted(glob('./data/test/*.mp4'))
-    train_video_paths = sorted(glob('./data/train/*.mp4'))
-
     model = load_model(args.model_folder)
 
-    model_name = args.model_folder[args.model_folder.rfind('/') + 1:]
+    if args.video_source is not None:
+        video = cv2.VideoCapture(args.video_source)
+        frame_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        success, image = video.read()
+        success = True
 
-    target_video_paths = train_video_paths if args.data_part == 'train' else test_video_paths
+        fourcc = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+        print(image.shape)
+        out = cv2.VideoWriter('output.avi', fourcc, 30.0, (frame_width, frame_height))
+        font = cv2.FONT_HERSHEY_TRIPLEX
+        df_columns = list(pd.read_csv('./data/train_labels/train01.csv').columns)
+        df_columns.append('NO TOOLS')
 
-    for video_path in target_video_paths:
-        construct_predictions_dataframe(video_path, model, args.delimiter, model_name, args.data_part)
+        while success:
+            success, image = video.read()
+            if hasattr(image, 'shape'):
+                img = cv2.resize(image, (image.shape[1] // args.delimiter, image.shape[0] // args.delimiter))
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img = img.astype(np.float32)
+                img /= 255
+                img = np.expand_dims(img, axis=0)
+                predictions = list(model.predict(img)[0][:-1])
+            else:
+                predictions = [0. for _ in range(21)]
+
+            text = 'NO TOOLS'
+            if len(np.unique(predictions)) > 1:
+                text = df_columns[predictions.index(max(predictions))]
+
+            cv2.putText(image, text.upper(), (100, 100), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
+            out.write(image)
+    else:
+        test_video_paths = sorted(glob('./data/test/*.mp4'))
+        train_video_paths = sorted(glob('./data/train/*.mp4'))
+
+        model_name = args.model_folder[args.model_folder.rfind('/') + 1:]
+
+        target_video_paths = train_video_paths if args.data_part == 'train' else test_video_paths
+
+        for video_path in target_video_paths:
+            construct_predictions_dataframe(video_path, model, args.delimiter, model_name, args.data_part)
