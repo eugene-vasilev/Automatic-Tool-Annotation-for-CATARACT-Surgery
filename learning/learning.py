@@ -48,7 +48,7 @@ def get_generators(width, height, batch):
     return train_seq, validation_seq
 
 
-def train(model='darknet19', width=480, height=270, batch=32, tensorboard=False, max_lr=0.001, min_lr=0.000001,
+def train(model_name='darknet19', width=480, height=270, batch=32, tensorboard=False, max_lr=0.001, min_lr=0.000001,
           workers=12, multi_gpu=1, epochs=500, steps_multiplier=4, distributed=False, loaded_model=None):
     if distributed:
         import tensorflow as tf
@@ -73,15 +73,15 @@ def train(model='darknet19', width=480, height=270, batch=32, tensorboard=False,
         assert loaded_model.output_shape[1:] == (22,)
         model = loaded_model
     else:
-        if model == 'darknet19':
+        if model_name == 'darknet19':
             model = darknet19((height, width, 3), 22)
-        elif model == 'darknet53':
+        elif model_name == 'darknet53':
             model = darknet53((height, width, 3), 22)
-        elif model == 'resnet50':
+        elif model_name == 'resnet50':
             model = resnet50((height, width, 3), 22)
-        elif model == 'mobilenetv2':
+        elif model_name == 'mobilenetv2':
             model = mobilenetv2((height, width, 3), 22)
-        elif model == 'inceptionv3':
+        elif model_name == 'inceptionv3':
             model = inceptionv3((height, width, 3), 22)
 
     if multi_gpu > 1:
@@ -104,7 +104,7 @@ def train(model='darknet19', width=480, height=270, batch=32, tensorboard=False,
     print('Make callbacks')
 
     current_datetime = datetime.now()
-    model_name = '{}_{}-{}-{}_{}:{}:{}_{}x{}'.format(model, current_datetime.day, current_datetime.month,
+    model_name = '{}_{}-{}-{}_{}:{}:{}_{}x{}'.format(model_name, current_datetime.day, current_datetime.month,
                                                      current_datetime.year, current_datetime.hour,
                                                      current_datetime.minute, current_datetime.second,
                                                      height, width)
@@ -166,6 +166,7 @@ if __name__ == '__main__':
     print("")
     print('Arguments is valid')
 
-    train(model=args.model, width=args.width, height=args.height, batch=args.batch, tensorboard=args.tensorboard,
-          max_lr=args.max_lr, min_lr=args.min_lr, workers=args.workers, multi_gpu=args.multi_gpu,
-          epochs=args.epochs, steps_multiplier=args.steps_multiplier, distributed=args.distributed)
+    train(model_name=args.model, width=args.width, height=args.height, batch=args.batch,
+          tensorboard=args.tensorboard, max_lr=args.max_lr, min_lr=args.min_lr, workers=args.workers,
+          multi_gpu=args.multi_gpu, epochs=args.epochs, steps_multiplier=args.steps_multiplier,
+          distributed=args.distributed)
